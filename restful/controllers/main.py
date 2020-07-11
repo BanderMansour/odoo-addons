@@ -56,10 +56,13 @@ class APIController(http.Controller):
             model = request.env[self._model].search([("model", "=", model)], limit=1)
             if model:
                 domain, fields, offset, limit, order = extract_arguments(payload)
+                offset = offset if offset else int(request.httprequest.values.get("offset", "0"))
+                limit = limit if limit else int(request.httprequest.values.get("limit", "0"))
+                print('******************88', offset, limit) # payload
                 data = request.env[model.model].search_read(
                     domain=domain, fields=fields, offset=offset, limit=limit, order=order,
                 )
-                print(data)
+            
                 if id:
                     domain = [("id", "=", int(id))]
                     data = request.env[model.model].search_read(
@@ -107,7 +110,7 @@ class APIController(http.Controller):
                             base_url, headers=headers, data=data)
 
         """
-        import ast
+      
 
         payload = payload.get("payload", {})
         ioc_name = model
@@ -176,7 +179,7 @@ class APIController(http.Controller):
             request.env.cr.rollback()
             return invalid_response("exception", e.name, 503)
         else:
-            return valid_response("record %s has been successfully deleted" % record.id)
+            return valid_response(record.read())
 
     @validate_token
     @http.route(_routes, type="http", auth="none", methods=["PATCH"], csrf=False)
@@ -213,4 +216,4 @@ class APIController(http.Controller):
         except Exception as e:
             return invalid_response("exception", e, 503)
         else:
-            return valid_response("record %s has been successfully update" % record.id)
+            return valid_response(record.read())
