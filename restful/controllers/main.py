@@ -58,7 +58,17 @@ class APIController(http.Controller):
                 domain, fields, offset, limit, order = extract_arguments(payload)
                 offset = offset if offset else int(request.httprequest.values.get("offset", "0"))
                 limit = limit if limit else int(request.httprequest.values.get("limit", "0"))
-                print('******************88', offset, limit) # payload
+                if type(payload.get("domain")) == str:
+                    try:
+                        domain = domain if domain else ast.literal_eval(ast.literal_eval(payload.get("domain")))
+                        fields = fields if fields else ast.literal_eval(ast.literal_eval(payload.get("fields")))
+                        
+                    except ValueError as e:
+                        domain = domain if domain else ast.literal_eval(payload.get("domain"))
+                        fields = fields if fields else ast.literal_eval(payload.get("fields"))
+                 
+                else:
+                    domain = domain if domain else ast.literal_eval(payload.get('domain', "[]"))
                 data = request.env[model.model].search_read(
                     domain=domain, fields=fields, offset=offset, limit=limit, order=order,
                 )
